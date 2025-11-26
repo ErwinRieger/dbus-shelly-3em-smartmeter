@@ -1,0 +1,4 @@
+#!/bin/sh
+exec 2>&1
+exec multilog t s250000 n4 /var/log/dbus-shelly-3em-smartmeter
+

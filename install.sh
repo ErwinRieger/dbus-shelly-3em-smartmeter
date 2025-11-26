@@ -19,8 +19,8 @@ ln -s $SCRIPT_DIR/service /service/$DAEMON_NAME
 
 
 
-# add install-script to rc.local to be ready for firmware update
-filename=/data/rc.local
+# add install-script to rcS.local to be ready for firmware update
+filename=/data/rcS.local
 if [ ! -f $filename ]
 then
     touch $filename
