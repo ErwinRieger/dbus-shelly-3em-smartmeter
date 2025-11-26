@@ -23,7 +23,7 @@ from vedbus import VeDbusService
 
 class DbusShelly3emService:
   def __init__(self, paths, productname='Shelly 3EM', connection='Shelly 3EM HTTP JSON service'):
-    self.config = self.getConfig()
+    self.config = self._getConfig()
     deviceinstance = int(self.config['DEFAULT']['DeviceInstance'])
     customname = self.config['DEFAULT']['CustomName']
     role = self.config['DEFAULT']['Role']
@@ -89,7 +89,7 @@ class DbusShelly3emService:
     return serial
  
  
-  def getConfig(self):
+  def _getConfig(self):
     config = configparser.ConfigParser()
     config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
     return config;
