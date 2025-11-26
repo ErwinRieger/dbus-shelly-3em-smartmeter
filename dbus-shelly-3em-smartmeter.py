@@ -22,7 +22,7 @@ from vedbus import VeDbusService
 
 
 class DbusShelly3emService:
-  def __init__(self, paths, productname='Shelly 3EM', connection='Shelly 3EM HTTP JSON service'):
+  def __init__(self, productname='Shelly 3EM', connection='Shelly 3EM HTTP JSON service'):
     self.config = self._getConfig()
     self.URL = self._getShellyStatusUrl()
     deviceinstance = int(self.config['DEFAULT']['DeviceInstance'])
@@ -42,7 +42,6 @@ class DbusShelly3emService:
         productid = 45069
 
     self._dbusservice = VeDbusService("{}.http_{:02d}".format(servicename, deviceinstance))
-    self._paths = paths
  
     logging.debug("%s /DeviceInstance = %d" % (servicename, deviceinstance))
  
@@ -67,9 +66,40 @@ class DbusShelly3emService:
     self._dbusservice.add_path('/UpdateIndex', 0)
  
     # add path values to dbus
+    #formatting 
+    _kwh = lambda p, v: (str(round(v, 2)) + ' kWh')
+    _a = lambda p, v: (str(round(v, 1)) + ' A')
+    _w = lambda p, v: (str(round(v, 1)) + ' W')
+    _v = lambda p, v: (str(round(v, 1)) + ' V')   
+   
+    #start our main-service
+    paths={
+          '/Ac/Energy/Forward': {'initial': 0, 'textformat': _kwh}, # energy bought from the grid
+          '/Ac/Energy/Reverse': {'initial': 0, 'textformat': _kwh}, # energy sold to the grid
+          '/Ac/Power': {'initial': 0, 'textformat': _w},
+          
+          '/Ac/Current': {'initial': 0, 'textformat': _a},
+          '/Ac/Voltage': {'initial': 0, 'textformat': _v},
+          
+          '/Ac/L1/Voltage': {'initial': 0, 'textformat': _v},
+          '/Ac/L2/Voltage': {'initial': 0, 'textformat': _v},
+          '/Ac/L3/Voltage': {'initial': 0, 'textformat': _v},
+          '/Ac/L1/Current': {'initial': 0, 'textformat': _a},
+          '/Ac/L2/Current': {'initial': 0, 'textformat': _a},
+          '/Ac/L3/Current': {'initial': 0, 'textformat': _a},
+          '/Ac/L1/Power': {'initial': 0, 'textformat': _w},
+          '/Ac/L2/Power': {'initial': 0, 'textformat': _w},
+          '/Ac/L3/Power': {'initial': 0, 'textformat': _w},
+          '/Ac/L1/Energy/Forward': {'initial': 0, 'textformat': _kwh},
+          '/Ac/L2/Energy/Forward': {'initial': 0, 'textformat': _kwh},
+          '/Ac/L3/Energy/Forward': {'initial': 0, 'textformat': _kwh},
+          '/Ac/L1/Energy/Reverse': {'initial': 0, 'textformat': _kwh},
+          '/Ac/L2/Energy/Reverse': {'initial': 0, 'textformat': _kwh},
+          '/Ac/L3/Energy/Reverse': {'initial': 0, 'textformat': _kwh},
+    }
     for path, settings in self._paths.items():
       self._dbusservice.add_path(
-        path, settings['initial'], gettextcallback=settings['textformat'], writeable=True, onchangecallback=self._handlechangedvalue)
+        path, settings['initial'], gettextcallback=settings['textformat'], writeable=True)
  
     # last update
     self._lastUpdate = time.time() - 0.5
@@ -223,13 +253,6 @@ class DbusShelly3emService:
     # return true, otherwise add_timeout will be removed from GObject - see docs http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
     return True
  
-  def _handlechangedvalue(self, path, value):
-    logging.debug("someone else updated %s to %s" % (path, value))
-    return True # accept the change
-
-
-
-
 def getLogLevel():
   config = configparser.ConfigParser()
   config.read("%s/config.ini" % (os.path.dirname(os.path.realpath(__file__))))
@@ -257,38 +280,8 @@ def main():
       # Have a mainloop, so we can send/receive asynchronous calls to and from dbus
       DBusGMainLoop(set_as_default=True)
      
-      #formatting 
-      _kwh = lambda p, v: (str(round(v, 2)) + ' kWh')
-      _a = lambda p, v: (str(round(v, 1)) + ' A')
-      _w = lambda p, v: (str(round(v, 1)) + ' W')
-      _v = lambda p, v: (str(round(v, 1)) + ' V')   
-     
       #start our main-service
-      pvac_output = DbusShelly3emService(
-        paths={
-          '/Ac/Energy/Forward': {'initial': 0, 'textformat': _kwh}, # energy bought from the grid
-          '/Ac/Energy/Reverse': {'initial': 0, 'textformat': _kwh}, # energy sold to the grid
-          '/Ac/Power': {'initial': 0, 'textformat': _w},
-          
-          '/Ac/Current': {'initial': 0, 'textformat': _a},
-          '/Ac/Voltage': {'initial': 0, 'textformat': _v},
-          
-          '/Ac/L1/Voltage': {'initial': 0, 'textformat': _v},
-          '/Ac/L2/Voltage': {'initial': 0, 'textformat': _v},
-          '/Ac/L3/Voltage': {'initial': 0, 'textformat': _v},
-          '/Ac/L1/Current': {'initial': 0, 'textformat': _a},
-          '/Ac/L2/Current': {'initial': 0, 'textformat': _a},
-          '/Ac/L3/Current': {'initial': 0, 'textformat': _a},
-          '/Ac/L1/Power': {'initial': 0, 'textformat': _w},
-          '/Ac/L2/Power': {'initial': 0, 'textformat': _w},
-          '/Ac/L3/Power': {'initial': 0, 'textformat': _w},
-          '/Ac/L1/Energy/Forward': {'initial': 0, 'textformat': _kwh},
-          '/Ac/L2/Energy/Forward': {'initial': 0, 'textformat': _kwh},
-          '/Ac/L3/Energy/Forward': {'initial': 0, 'textformat': _kwh},
-          '/Ac/L1/Energy/Reverse': {'initial': 0, 'textformat': _kwh},
-          '/Ac/L2/Energy/Reverse': {'initial': 0, 'textformat': _kwh},
-          '/Ac/L3/Energy/Reverse': {'initial': 0, 'textformat': _kwh},
-        })
+      pvac_output = DbusShelly3emService()
      
       logging.info('Connected to dbus, and switching over to gobject.MainLoop() (= event based)')
       mainloop = gobject.MainLoop()
