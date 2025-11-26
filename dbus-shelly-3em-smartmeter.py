@@ -96,7 +96,6 @@ class DbusShelly3emService:
  
  
   def _getSignOfLifeInterval(self):
-    config = self._getConfig()
     value = self.config['DEFAULT']['SignOfLifeLog']
     
     if not value: 
@@ -106,7 +105,6 @@ class DbusShelly3emService:
  
  
   def _getShellyPosition(self):
-    config = self._getConfig()
     value = self.config['DEFAULT']['Position']
     
     if not value: 
@@ -116,7 +114,6 @@ class DbusShelly3emService:
  
  
   def _getShellyStatusUrl(self):
-    config = self._getConfig()
     accessType = self.config['DEFAULT']['AccessType']
     
     if accessType == 'OnPremise': 
@@ -157,7 +154,6 @@ class DbusShelly3emService:
     try:
       #get data from Shelly 3em
       meter_data = self._getShellyData()
-      config = self._getConfig()
 
       try:
         remapL1 = int(self.config['ONPREMISE']['L1Position'])
