@@ -24,6 +24,7 @@ from vedbus import VeDbusService
 class DbusShelly3emService:
   def __init__(self, paths, productname='Shelly 3EM', connection='Shelly 3EM HTTP JSON service'):
     self.config = self._getConfig()
+    self.URL = self._getShellyStatusUrl()
     deviceinstance = int(self.config['DEFAULT']['DeviceInstance'])
     customname = self.config['DEFAULT']['CustomName']
     role = self.config['DEFAULT']['Role']
@@ -71,7 +72,7 @@ class DbusShelly3emService:
         path, settings['initial'], gettextcallback=settings['textformat'], writeable=True, onchangecallback=self._handlechangedvalue)
  
     # last update
-    self._lastUpdate = 0
+    self._lastUpdate = time.time() - 0.5
  
     # add _update function 'timer'
     gobject.timeout_add(500, self._update) # pause 500ms before the next request
@@ -126,12 +127,12 @@ class DbusShelly3emService:
     
  
   def _getShellyData(self):
-    URL = self._getShellyStatusUrl()
-    meter_r = requests.get(url = URL, timeout=5)
+    # URL = self._getShellyStatusUrl()
+    meter_r = requests.get(url = self.URL, timeout=5)
     
     # check for response
     if not meter_r:
-        raise ConnectionError("No response from Shelly 3EM - %s" % (URL))
+        raise ConnectionError("No response from Shelly 3EM - %s" % (self.URL))
     
     meter_data = meter_r.json()     
     
@@ -186,13 +187,16 @@ class DbusShelly3emService:
       # Old version
       #self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/L1/Energy/Forward'] + self._dbusservice['/Ac/L2/Energy/Forward'] + self._dbusservice['/Ac/L3/Energy/Forward']
       #self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/L1/Energy/Reverse'] + self._dbusservice['/Ac/L2/Energy/Reverse'] + self._dbusservice['/Ac/L3/Energy/Reverse'] 
-      
+     
+      dt = time.time() - self._lastUpdate
+      f = 3600000 / dt
+
       # New Version - from xris99
-      #Calc = 60min * 60 sec / 0.500 (refresh interval of 500ms) * 1000
+      #Calc = 60min * 60 sec / dt (refresh interval of 500ms) * 1000
       if (self._dbusservice['/Ac/Power'] > 0):
-           self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/Energy/Forward'] + (self._dbusservice['/Ac/Power']/(60*60/0.5*1000))            
+           self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/Energy/Forward'] + (self._dbusservice['/Ac/Power'] /  f)            
       if (self._dbusservice['/Ac/Power'] < 0):
-           self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/Energy/Reverse'] + (self._dbusservice['/Ac/Power']*-1/(60*60/0.5*1000))
+           self._dbusservice['/Ac/Energy/Reverse'] = self._dbusservice['/Ac/Energy/Reverse'] + (self._dbusservice['/Ac/Power'] / -f)
 
       
       #logging
