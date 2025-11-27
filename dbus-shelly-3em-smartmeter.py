@@ -41,6 +41,15 @@ class DbusShelly3emService:
     else:
         productid = 45069
 
+    self.phaseIndex = [0, 1, 2]
+    try:
+        remapL1 = int(self.config['ONPREMISE']['L1Position'])
+    except KeyError:
+        remapL1 = 1
+    else:
+        self.phaseIndex[0] = remapL1-1
+        self.phaseIndex[remapL1-1] = 0
+
     self._dbusservice = VeDbusService("{}.http_{:02d}".format(servicename, deviceinstance))
  
     logging.debug("%s /DeviceInstance = %d" % (servicename, deviceinstance))
@@ -186,34 +195,31 @@ class DbusShelly3emService:
       #get data from Shelly 3em
       meter_data = self._getShellyData()
 
-      try:
-        remapL1 = int(self.config['ONPREMISE']['L1Position'])
-      except KeyError:
-        remapL1 = 1
+      # xxx if l1position = 1 -> index 0 is stored in index 0
+      # xxx if l1position = 2 -> index 1 is stored in index 0
 
-      if remapL1 > 1:
-        old_l1 = meter_data['emeters'][0]
-        meter_data['emeters'][0] = meter_data['emeters'][remapL1-1]
-        meter_data['emeters'][remapL1-1] = old_l1
-       
+      l1data = meter_data['emeters'][self.phaseIndex[0]]
+      l2data = meter_data['emeters'][self.phaseIndex[1]]
+      l3data = meter_data['emeters'][self.phaseIndex[2]]
+
       #send data to DBus
       acpower = meter_data['total_power']
       self._dbusservice['/Ac/Power'] = acpower
-      self._dbusservice['/Ac/L1/Voltage'] = meter_data['emeters'][0]['voltage']
-      self._dbusservice['/Ac/L2/Voltage'] = meter_data['emeters'][1]['voltage']
-      self._dbusservice['/Ac/L3/Voltage'] = meter_data['emeters'][2]['voltage']
-      self._dbusservice['/Ac/L1/Current'] = meter_data['emeters'][0]['current']
-      self._dbusservice['/Ac/L2/Current'] = meter_data['emeters'][1]['current']
-      self._dbusservice['/Ac/L3/Current'] = meter_data['emeters'][2]['current']
-      self._dbusservice['/Ac/L1/Power'] = meter_data['emeters'][0]['power']
-      self._dbusservice['/Ac/L2/Power'] = meter_data['emeters'][1]['power']
-      self._dbusservice['/Ac/L3/Power'] = meter_data['emeters'][2]['power']
-      self._dbusservice['/Ac/L1/Energy/Forward'] = (meter_data['emeters'][0]['total']/1000)
-      self._dbusservice['/Ac/L2/Energy/Forward'] = (meter_data['emeters'][1]['total']/1000)
-      self._dbusservice['/Ac/L3/Energy/Forward'] = (meter_data['emeters'][2]['total']/1000)
-      self._dbusservice['/Ac/L1/Energy/Reverse'] = (meter_data['emeters'][0]['total_returned']/1000) 
-      self._dbusservice['/Ac/L2/Energy/Reverse'] = (meter_data['emeters'][1]['total_returned']/1000) 
-      self._dbusservice['/Ac/L3/Energy/Reverse'] = (meter_data['emeters'][2]['total_returned']/1000) 
+      self._dbusservice['/Ac/L1/Voltage'] = l1data['voltage']
+      self._dbusservice['/Ac/L2/Voltage'] = l2data['voltage']
+      self._dbusservice['/Ac/L3/Voltage'] = l3data['voltage']
+      self._dbusservice['/Ac/L1/Current'] = l1data['current']
+      self._dbusservice['/Ac/L2/Current'] = l2data['current']
+      self._dbusservice['/Ac/L3/Current'] = l3data['current']
+      self._dbusservice['/Ac/L1/Power'] = l1data['power']
+      self._dbusservice['/Ac/L2/Power'] = l2data['power']
+      self._dbusservice['/Ac/L3/Power'] = l3data['power']
+      self._dbusservice['/Ac/L1/Energy/Forward'] = (l1data['total']/1000)
+      self._dbusservice['/Ac/L2/Energy/Forward'] = (l2data['total']/1000)
+      self._dbusservice['/Ac/L3/Energy/Forward'] = (l3data['total']/1000)
+      self._dbusservice['/Ac/L1/Energy/Reverse'] = (l1data['total_returned']/1000) 
+      self._dbusservice['/Ac/L2/Energy/Reverse'] = (l2data['total_returned']/1000) 
+      self._dbusservice['/Ac/L3/Energy/Reverse'] = (l3data['total_returned']/1000) 
       
       # Old version
       #self._dbusservice['/Ac/Energy/Forward'] = self._dbusservice['/Ac/L1/Energy/Forward'] + self._dbusservice['/Ac/L2/Energy/Forward'] + self._dbusservice['/Ac/L3/Energy/Forward']
