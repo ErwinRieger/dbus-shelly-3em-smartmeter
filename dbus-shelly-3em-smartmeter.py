@@ -106,7 +106,7 @@ class DbusShelly3emService:
           '/Ac/L2/Energy/Reverse': {'initial': 0, 'textformat': _kwh},
           '/Ac/L3/Energy/Reverse': {'initial': 0, 'textformat': _kwh},
     }
-    for path, settings in self._paths.items():
+    for path, settings in paths.items():
       self._dbusservice.add_path(
         path, settings['initial'], gettextcallback=settings['textformat'], writeable=True)
  
@@ -248,7 +248,7 @@ class DbusShelly3emService:
       #logging
       logging.debug("House Consumption (/Ac/Power): %s" % acpower)
       logging.debug("House Forward (/Ac/Energy/Forward): %s" % forward_e)
-      logging.debug("House Reverse (/Ac/Energy/Revers): %s" % reverse_e
+      logging.debug("House Reverse (/Ac/Energy/Revers): %s" % reverse_e)
       logging.debug("---");
       
       # increment UpdateIndex - to show that new data is available an wrap

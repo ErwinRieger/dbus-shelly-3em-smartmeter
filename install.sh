@@ -12,6 +12,15 @@ chmod 744 $SCRIPT_DIR/uninstall.sh
 chmod a+x $SCRIPT_DIR/service/run
 chmod 755 $SCRIPT_DIR/service/run
 
+chmod a+x $SCRIPT_DIR/service/log/run
+chmod 755 $SCRIPT_DIR/service/log/run
+
+chmod a+x $SCRIPT_DIR/run.sh
+chmod 755 $SCRIPT_DIR/run.sh
+
+chmod a+x $SCRIPT_DIR/dbus-shelly-3em-smartmeter.py
+chmod 755 $SCRIPT_DIR/dbus-shelly-3em-smartmeter.py
+
 
 
 # create sym-link to run script in deamon
